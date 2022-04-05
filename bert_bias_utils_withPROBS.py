@@ -347,6 +347,8 @@ def prob_with_prior_PROBS(pred_TM, pred_TAM, input_ids_TAM, original_ids, tokeni
     input_ids_TAM = input_ids_TAM.cpu()
 
     probs = []
+    pt_all = []
+    pprior_all = []
     for doc_idx, id_list in enumerate(input_ids_TAM):
         # see where the masks were placed in this sentence
         mask_indices = np.where(id_list == tokenizer.mask_token_id)[0]
@@ -358,6 +360,8 @@ def prob_with_prior_PROBS(pred_TM, pred_TAM, input_ids_TAM, original_ids, tokeni
         # get its prior probability (masked profession)
         prior = pred_TAM[doc_idx][mask_indices[0]][target_id].item()
 
+        pt_all.append(target_prob)
+        pprior_all.append(prior)
         probs.append(np.log(target_prob / prior))
 
-    return probs, target_prob, prior
+    return probs, pt_all, pprior_all
