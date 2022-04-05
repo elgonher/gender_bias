@@ -333,8 +333,8 @@ def model_evaluation_PROB(eval_df, tokenizer, model, device):
                                        tokenizer)
 
         associations_all += associations
-        pt_all += pt
-        pprior_all += pprior
+        pt_all.append(pt)
+        pprior_all.append(pprior)
 
     #return associations_all, eval_tokens, eval_tokens_TM, eval_attentions_TM, eval_data
     return associations_all, pt_all, pprior_all
