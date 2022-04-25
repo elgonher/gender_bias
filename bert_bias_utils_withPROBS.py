@@ -332,7 +332,8 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
                                        tokenizer)
 
         associations_all += associations
-        ptpprior_all.append("pt: {}; pprior: {}".format(pt, pprior))
+        ptpprior_all.append("pt: {}, pprior: {}, input_TM: {}, input_TAM: {}".format(pt, pprior, b_input_TM, b_input_TAM))
+        #ptpprior_all.append("pt: {}; pprior: {}".format(pt, pprior))
         #pt_all.append(pt)
         #pprior_all.append(pprior)
 
