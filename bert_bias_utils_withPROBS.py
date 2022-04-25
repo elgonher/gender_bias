@@ -308,7 +308,7 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
     model.eval()
     associations_all = []
     pt_all = []
-    ptpprior_all = []
+    pprior_all = []
     for step, batch in enumerate(eval_dataloader):
         b_input_TM = batch[0].to(device)
         b_att_TM = batch[1].to(device)
