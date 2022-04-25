@@ -307,6 +307,7 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
     # put model in evaluation mode & start predicting
     model.eval()
     associations_all = []
+    pt_all = []
     ptpprior_all = []
     for step, batch in enumerate(eval_dataloader):
         b_input_TM = batch[0].to(device)
@@ -332,13 +333,14 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
                                        tokenizer)
 
         associations_all += associations
-        ptpprior_all.append("pt: {}, pprior: {}, input_TM: {}, input_TAM: {}".format(pt, pprior, b_input_TM, b_input_TAM))
-        #ptpprior_all.append("pt: {}; pprior: {}".format(pt, pprior))
-        #pt_all.append(pt)
-        #pprior_all.append(pprior)
+        #ptpprior_all.append("pt: {}, pprior: {}, input_TM: {}, input_TAM: {}".format(pt, pprior, b_input_TM, b_input_TAM))
+        ptpprior_all.append("pt: {}; pprior: {}".format(pt, pprior))
+        pt_all.append(pt)
+        pprior_all.append(pprior)
 
     #return associations_all, eval_tokens, eval_tokens_TM, eval_attentions_TM, eval_data
-    return associations_all, ptpprior_all
+    #return associations_all, ptpprior_all
+    return associations_all, pt_all, ptpprior_all
 
 def prob_with_prior_PROBS(pred_TM, pred_TAM, input_ids_TAM, original_ids, tokenizer):
     pred_TM = pred_TM.cpu()
