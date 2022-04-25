@@ -340,7 +340,7 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
 
     #return associations_all, eval_tokens, eval_tokens_TM, eval_attentions_TM, eval_data
     #return associations_all, ptpprior_all
-    return associations_all, pt_all, ptpprior_all
+    return associations_all, pt_all, pprior_all
 
 def prob_with_prior_PROBS(pred_TM, pred_TAM, input_ids_TAM, original_ids, tokenizer):
     pred_TM = pred_TM.cpu()
