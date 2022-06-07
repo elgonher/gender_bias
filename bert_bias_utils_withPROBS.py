@@ -263,6 +263,7 @@ def format_time(elapsed):
 ### The two following functions are repeated above
 ## In this case they also return the individual probabilities (pt and pprior) and not just the asoc
 
+
 def model_evaluation_PROBS(eval_df, tokenizer, model, device):
     """takes professional sentences as DF, a tokenizer & a BERTformaskedLM model
     and predicts the associations"""
@@ -326,9 +327,7 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
         assert predictions_TM.shape == predictions_TAM.shape
 
         # calculate associations
-        associations, pt, pprior = 
-        
-        (predictions_TM,
+        associations, pt, pprior = prob_with_prior_PROBS(predictions_TM,
                                        predictions_TAM,
                                        b_input_TAM,
                                        batch[4],  # normal inputs
