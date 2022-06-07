@@ -261,7 +261,7 @@ def format_time(elapsed):
 
 
 ### The two following functions are repeated above
-## In this case they also return the individual probabilities (pt and pprior) and not just the logarithmic function
+## In this case they also return the individual probabilities (pt and pprior) and not just the asoc
 
 def model_evaluation_PROBS(eval_df, tokenizer, model, device):
     """takes professional sentences as DF, a tokenizer & a BERTformaskedLM model
@@ -326,7 +326,9 @@ def model_evaluation_PROBS(eval_df, tokenizer, model, device):
         assert predictions_TM.shape == predictions_TAM.shape
 
         # calculate associations
-        associations, pt, pprior = prob_with_prior_PROBS(predictions_TM,
+        associations, pt, pprior = 
+        
+        (predictions_TM,
                                        predictions_TAM,
                                        b_input_TAM,
                                        batch[4],  # normal inputs
@@ -364,5 +366,113 @@ def prob_with_prior_PROBS(pred_TM, pred_TAM, input_ids_TAM, original_ids, tokeni
         pt_all.append(target_prob)
         pprior_all.append(prior)
         probs.append(np.log(target_prob / prior))
+
+    return probs, pt_all, pprior_all
+
+### The two following functions are repeated above
+## In this case they return the asoc value WITHOUT THE LOG and the individual probabilities (pt and pprior) and not just the asoc
+
+def model_evaluation_PROBS_noLog(eval_df, tokenizer, model, device):
+    """takes professional sentences as DF, a tokenizer & a BERTformaskedLM model
+    and predicts the associations"""
+
+    # as max_len get the smallest power of 2 greater or equal to the max sentence lenght
+    max_len = max([len(sent.split()) for sent in eval_df.Sent_TM])
+    pos = math.ceil(math.log2(max_len))
+    max_len_eval = int(math.pow(2, pos))
+
+    print('max_len evaluation: {}'.format(max_len_eval))
+
+    # create BERT-ready inputs: target masked, target and attribute masked,
+    # and the tokenized original inputs to recover the original target word
+    eval_tokens_TM, eval_attentions_TM = input_pipeline(eval_df.Sent_TM,
+                                                        tokenizer,
+                                                        max_len_eval)
+    eval_tokens_TAM, eval_attentions_TAM = input_pipeline(eval_df.Sent_TAM,
+                                                          tokenizer,
+                                                          max_len_eval)
+    eval_tokens, _ = input_pipeline(eval_df.Sentence, tokenizer, max_len_eval)
+
+    # check that lengths match before going further
+    assert eval_tokens_TM.shape == eval_attentions_TM.shape
+    assert eval_tokens_TAM.shape == eval_attentions_TAM.shape
+
+    # make a Evaluation Dataloader
+    eval_batch = 20
+    eval_data = TensorDataset(eval_tokens_TM, eval_attentions_TM,
+                              eval_tokens_TAM, eval_attentions_TAM,
+                              eval_tokens)
+    eval_sampler = SequentialSampler(eval_data)
+    eval_dataloader = DataLoader(eval_data, batch_size=eval_batch,
+                                 sampler=eval_sampler)
+
+    # put everything to GPU (if it is available)
+    # eval_tokens_TM = eval_tokens_TM.to(device)
+    # eval_attentions_TM = eval_attentions_TM.to(device)
+    # eval_tokens_TAM = eval_tokens_TAM.to(device)
+    # eval_attentions_TAM = eval_attentions_TAM.to(device)
+    model.to(device)
+
+    # put model in evaluation mode & start predicting
+    model.eval()
+    associations_all = []
+    pt_all = []
+    pprior_all = []
+    for step, batch in enumerate(eval_dataloader):
+        b_input_TM = batch[0].to(device)
+        b_att_TM = batch[1].to(device)
+        b_input_TAM = batch[2].to(device)
+        b_att_TAM = batch[3].to(device)
+
+        with torch.no_grad():
+            outputs_TM = model(b_input_TM,
+                               attention_mask=b_att_TM)
+            outputs_TAM = model(b_input_TAM,
+                                attention_mask=b_att_TAM)
+            predictions_TM = softmax(outputs_TM[0], dim=2)
+            predictions_TAM = softmax(outputs_TAM[0], dim=2)
+
+        assert predictions_TM.shape == predictions_TAM.shape
+
+        # calculate associations
+        associations, pt, pprior = prob_with_prior_PROBS_noLog(predictions_TM,
+                                       predictions_TAM,
+                                       b_input_TAM,
+                                       batch[4],  # normal inputs
+                                       tokenizer)
+
+        associations_all += associations
+        #ptpprior_all.append("pt: {}, pprior: {}, input_TM: {}, input_TAM: {}".format(pt, pprior, b_input_TM, b_input_TAM))
+        #ptpprior_all.append("pt: {}; pprior: {}".format(pt, pprior))
+        pt_all.append(pt)
+        pprior_all.append(pprior)
+
+    #return associations_all, eval_tokens, eval_tokens_TM, eval_attentions_TM, eval_data
+    #return associations_all, ptpprior_all
+    return associations_all, pt_all, pprior_all
+
+def prob_with_prior_PROBS_noLog(pred_TM, pred_TAM, input_ids_TAM, original_ids, tokenizer):
+    pred_TM = pred_TM.cpu()
+    pred_TAM = pred_TAM.cpu()
+    input_ids_TAM = input_ids_TAM.cpu()
+
+    probs = []
+    pt_all = []
+    pprior_all = []
+    for doc_idx, id_list in enumerate(input_ids_TAM):
+        # see where the masks were placed in this sentence
+        mask_indices = np.where(id_list == tokenizer.mask_token_id)[0]
+        # now get the probability of the target word:
+        # first get id of target word
+        target_id = original_ids[doc_idx][mask_indices[0]]
+        # get its probability with unmasked profession
+        target_prob = pred_TM[doc_idx][mask_indices[0]][target_id].item()
+        # get its prior probability (masked profession)
+        prior = pred_TAM[doc_idx][mask_indices[0]][target_id].item()
+        asoc = target_prob / prior
+
+        pt_all.append(target_prob)
+        pprior_all.append(prior)
+        probs.append(asoc)
 
     return probs, pt_all, pprior_all
