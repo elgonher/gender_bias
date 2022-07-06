@@ -63,10 +63,14 @@ def attention_mask_creator(input_ids):
         attention_masks.append(segments_ids)
     return torch.tensor(attention_masks)
 
+#def asociaciones(group1):
+    #print('Group 1:')
+    #print(group1.describe().T) # returns a df with the statistics of ALL numerical columns in original df
+    #return
+
 def asociaciones(group1):
-    print('Group 1:')
-    print(group1.describe().T) # returns a df with the statistics of ALL numerical columns in original df
-    return
+    df = group1.describe().T
+    return df
 
 def statistics(group1, group2):
     """take 2 groups of paired samples and compute either a paired samples t-test or
