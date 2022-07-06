@@ -66,7 +66,7 @@ def attention_mask_creator(input_ids):
 def asociaciones(group1):
     print('Group 1:')
     #print(group1.describe()) # returns a df with the statistics of ALL numerical columns in original df
-    print(group1.describe()['Pre_Assoc']).T # returns a df with the statistics of the column Pre_Assoc in original df
+    print(group1.describe()['Pre_Assoc'].T) # returns a df with the statistics of the column Pre_Assoc in original df
 
     return
 
